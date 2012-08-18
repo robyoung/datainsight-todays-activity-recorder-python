@@ -14,7 +14,11 @@ class Measurements(object):
   DEFAULT_SITE = "govuk"
   @classmethod
   def create_test(cls):
-    return cls(pymongo.Connection(settings.MONGO["host"]), "test")
+    return cls.create("test")
+
+  @classmethod
+  def create(cls, env):
+    return cls(pymongo.Connection(settings.MONGO["host"]), env)
 
   def __init__(self, conn, env):
     self._conn = conn

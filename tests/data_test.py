@@ -83,7 +83,6 @@ class SaveMeasurementTestCase(MeasurementsTestCase):
 
     self.assertNotEqual(measurement1['updated_at'], measurement2['updated_at'])
 
-
 class GetDataTestCase(MeasurementsTestCase):
   def setUp(self):
     super(GetDataTestCase, self).setUp()

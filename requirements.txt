@@ -2,3 +2,6 @@ nose==1.1.2
 pymongo==2.2.1
 numpy==1.6.2
 pandas==0.8.1
+amqplib
+python-dateutil
+flask
