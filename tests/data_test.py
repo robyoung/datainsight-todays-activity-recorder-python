@@ -1,6 +1,7 @@
 import unittest
 import datetime
 import time
+import mock
 
 from datainsight.todaysactivity.data import Measurements
 
@@ -140,3 +141,15 @@ class GetLastMonthAverageByHourTestCase(GetDataTestCase):
     self.assertAlmostEqual(activity[10], 403.33333, 4)
     self.assertAlmostEqual(activity[11], 406.66666, 4)
     self.assertAlmostEqual(activity[23], 406.66666, 4)
+
+class GetActivityTodayByHour(GetDataTestCase):
+  def test_get_activity_today_by_hour(self):
+    self.measurements.get_live_at = mock.Mock(return_value=self.two_hours_ago)
+    activity = self.measurements.get_activity_today_by_hour()
+
+    self.assertEqual(activity['live_at'], self.two_hours_ago)
+    self.assertEqual(len(activity['values']), 24)
+
+    self.assertEqual(len([item for item in activity['values'] if "today" in item['visitors']]), 9)
+    self.assertEqual(len([item for item in activity['values'] if "yesterday" in item['visitors']]), 24)
+    self.assertEqual(len([item for item in activity['values'] if "monthly_average" in item['visitors']]), 24)

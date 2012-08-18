@@ -91,3 +91,24 @@ class Measurements(object):
 #      result[key] = sum(values) / float(len(values))
 #
 #    return result
+
+  def get_activity_today_by_hour(self):
+    live_at = self.get_live_at()
+
+    visitors_today = self.get_visitors_today_by_hour(live_at)
+    visitors_yesterday = self.get_visitors_yesterday_by_hour(live_at)
+    last_month_average = self.get_last_month_average_by_hour(live_at)
+
+    def build_result(hour):
+      result = {"hour_of_day": hour, "visitors": {}}
+      if hour < len(visitors_today):
+        result['visitors']['today'] = visitors_today[hour]
+      result['visitors']['yesterday'] = visitors_yesterday[hour]
+      result['visitors']['monthly_average'] = last_month_average[hour]
+
+      return result
+
+    return {
+      "values": [build_result(hour) for hour in range(24)],
+      "live_at": live_at
+    }
