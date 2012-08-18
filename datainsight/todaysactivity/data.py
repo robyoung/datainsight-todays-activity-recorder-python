@@ -1,6 +1,14 @@
 import datetime
-from datainsight import settings
+import pandas
 import pymongo
+
+from datainsight import settings
+
+def mongo_to_data_frame(cursor, index, fields):
+  df = pandas.DataFrame(list(cursor), columns=[index] + fields)
+  df.index = df[index]
+
+  return df
 
 class Measurements(object):
   DEFAULT_SITE = "govuk"
@@ -49,3 +57,37 @@ class Measurements(object):
     d = dict((m['start_at'].hour, m['value']) for m in self.coll().find(query))
 
     return [d.get(k) for k in range(max(d.keys())+1)]
+
+  def get_visitors_yesterday_by_hour(self, live_at):
+    midnight = datetime.datetime.combine(live_at.date(), datetime.time())
+    query = {
+      "start_at": {"$gte": midnight - datetime.timedelta(days=1)},
+      "end_at": {"$lte": midnight},
+      "site": self.DEFAULT_SITE
+    }
+    d = dict((m['start_at'].hour, m['value']) for m in self.coll().find(query))
+
+    return [d.get(k) for k in range(24)]
+
+  def get_last_month_average_by_hour(self, live_at):
+    midnight = datetime.datetime.combine(live_at.date(), datetime.time())
+    query = {
+      "start_at": {"$gte": midnight - datetime.timedelta(days=30)},
+      "end_at": {"$lte": midnight},
+      "site": self.DEFAULT_SITE
+    }
+    cursor = self.coll().find(query)
+
+    result = [None] * 24
+
+    df = mongo_to_data_frame(cursor, "start_at", ["value"])
+    for hour, average in df.groupby(lambda x: x.hour).mean()['value'].iteritems():
+      result[hour] = average
+
+    return result
+
+#    for key, values in itertools.groupby(sorted((v['start_at'].hour, v['value']) for v in self.coll().find(query)), lambda v: v[0]):
+#      values = list(v[1] for v in values)
+#      result[key] = sum(values) / float(len(values))
+#
+#    return result

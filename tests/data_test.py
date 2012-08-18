@@ -92,9 +92,17 @@ class GetDataTestCase(MeasurementsTestCase):
     fourty_days_ago = datetime.datetime.combine(now - datetime.timedelta(days=40), datetime.time())
     midnight = datetime.datetime.combine(now + datetime.timedelta(days=1), datetime.time())
 
+    def value(params):
+      if params["end_at"] < (now - datetime.timedelta(days=2)):
+        return 400
+      elif params["end_at"] < now:
+        return 500
+      else:
+        return 0
+
     self.add_measurements(fourty_days_ago, midnight,
       collected_at=self.two_hours_ago,
-      value=lambda params: 500 if params["end_at"] < now else 0
+      value=value
     )
 
 
@@ -115,3 +123,20 @@ class GetTodayByHourTestCase(GetDataTestCase):
 
     self.assertEqual(len(activity), 9)
     self.assertEqual(activity, [500, 500, 500, None, None, None, 500, 500, 500])
+
+class GetYesterdayByHourTestCase(GetDataTestCase):
+  def test_get_visitors_yesterday_by_hour(self):
+    activity = self.measurements.get_visitors_yesterday_by_hour(self.two_hours_ago)
+
+    self.assertEqual(len(activity), 24)
+    self.assertEqual(activity, [500]*24)
+
+class GetLastMonthAverageByHourTestCase(GetDataTestCase):
+  def test_get_last_month_average_by_hour(self):
+    activity = self.measurements.get_last_month_average_by_hour(self.two_hours_ago)
+
+    self.assertEqual(len(activity), 24)
+    self.assertAlmostEqual(activity[0], 403.33333, 4)
+    self.assertAlmostEqual(activity[10], 403.33333, 4)
+    self.assertAlmostEqual(activity[11], 406.66666, 4)
+    self.assertAlmostEqual(activity[23], 406.66666, 4)
